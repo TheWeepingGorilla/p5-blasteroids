@@ -1,9 +1,10 @@
-var s = function( p ) {
+var a = function( p ) {
 
 	function Thing() {
 		this.angle = 0;
 		this.angularVelocity = 0;
 		this.angularAcceleration = 0;
+		this.angleLimit = 0;
 
 		this.location = p.createVector(0, 0);
 		this.velocity = p.createVector(0, 0);
@@ -33,6 +34,14 @@ var s = function( p ) {
 
 		this.rotate = function(rotation) {
 			this.angle = this.angle + rotation;
+			if (Math.abs(this.angle) >= this.angleLimit) {
+				if (this.angle <= 0) {
+					this.angle = -this.angleLimit;
+				}
+				else {
+					this.angle = this.angleLimit;
+				}
+			}
 			console.log(this.angle);
 		}
 	}
@@ -41,6 +50,7 @@ var s = function( p ) {
 		Thing.call(this);
 
 		this.thrust = [{strength: .01, directionOffset: 0}];
+		this.angleLimit = .2;
 
 		this.drawMain = function() {
 			p.strokeWeight(4);
@@ -85,6 +95,7 @@ var s = function( p ) {
 
 		for (i=0; i<objects.length; i++) {
 			p.translate(objects[i].location.x, objects[i].location.y);
+			p.rotate(objects[i].angle);
 			objects[i].drawMain();
 			p.translate(-objects[i].location.x, -objects[i].location.y); // reset to 0,0
 			if (objects[i].controller = players[0]) {
@@ -93,10 +104,13 @@ var s = function( p ) {
 					objects[i].applyThrust();
 				}
 				if (p.keyIsDown(players[0].rotateCounterclockwise)) {
+					objects[i].rotate(-p.PI / 64);
+				}
+				else if (p.keyIsDown(players[0].rotateClockwise)) {
 					objects[i].rotate(p.PI / 64);
 				}
-				if (p.keyIsDown(players[0].rotateClockwise)) {
-					objects[i].rotate(-1 * p.PI / 64);
+				else {
+					objects[i].angle = 0;
 				}
 			}
 		}
@@ -108,4 +122,4 @@ var s = function( p ) {
 	}
 };
 
-var myp5 = new p5(s,'sketch');
+var sketch = new p5(a,'sketch');
