@@ -6,17 +6,41 @@ var s = function( p ) {
 		this.angularAcceleration = 0;
 
 		this.location = p.createVector(0, 0);
-		this.velocity = 0;
-		this.acceleration = 0;
+		this.velocity = p.createVector(0, 0);
+		this.thrust = 0;
+
+		this.controller = 'program';
 
 		this.setLocation = function(x, y) {
 			this.location.x = x;
 			this.location.y = y;
 		}
+
+		this.applyThrust = function() {
+			// note: thrust is applied where the Thing is pointing,
+			// which for some Things (e.g. piloted ships)
+			// isn't usually the direction it's currently going
+			// so we need to find the x and y for the current angle of the Thing
+			// and apply the thrust in the correct direction
+			var x = p.cos(this.angle);
+			var y = p.sin(this.angle);
+			var vecToAdd = p.createVector(x,y);
+			vecToAdd.rotate(this.thrust[0].directionOffset);
+			vecToAdd.mult(this.thrust[0].strength);
+			this.velocity = this.velocity.add(vecToAdd);
+			console.log(this.velocity);
+		}
+
+		this.rotate = function(rotation) {
+			this.angle = this.angle + rotation;
+			console.log(this.angle);
+		}
 	}
 
 	function TriangleShip() {
 		Thing.call(this);
+
+		this.thrust = [{strength: .01, directionOffset: 0}];
 
 		this.drawMain = function() {
 			p.strokeWeight(4);
@@ -39,6 +63,7 @@ var s = function( p ) {
 	var objects = [];
 	objects[0] = new TriangleShip();
 	objects[0].setLocation(p.windowWidth / 2, p.windowHeight / 2);
+	objects[0].owner = 'playerOne';
 
 	p.setup = function() {
 		p.frameRate(60);
@@ -46,16 +71,25 @@ var s = function( p ) {
 	}
 
 	p.draw = function() {
-		// paint background and save default drawing location (0,0)
 		p.background(0);
-		p.push();
 
-		p.translate(objects[0].location.x, objects[0].location.y);
-		objects[0].drawMain();
-		objects[0].drawThrust();
-
-		// restore default drawing location (0,0)
-		p.pop();
+		for (i=0; i<objects.length; i++) {
+			p.translate(objects[i].location.x, objects[i].location.y);
+			objects[i].drawMain();
+			p.translate(-objects[i].location.x, -objects[i].location.y);
+			if (objects[i].owner = 'playerOne') {
+				if (p.keyIsDown(87)) {
+					objects[i].drawThrust();
+					objects[i].applyThrust();
+				}
+				if (p.keyIsDown(65)) {
+					objects[i].rotate(p.PI / 64);
+				}
+				if (p.keyIsDown(68)) {
+					objects[i].rotate(-1 * p.PI / 64);
+				}
+			}
+		}
 	}
 
 	// auto-resize canvas to window size
