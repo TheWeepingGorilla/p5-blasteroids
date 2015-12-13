@@ -60,10 +60,20 @@ var s = function( p ) {
 	}
 	TriangleShip.prototype = Object.create(Thing.prototype);
 
+	function Player() {
+		this.thrust = 87;
+		this.rotateCounterclockwise = 65;
+		this.rotateClockwise = 68;
+		this.name = 'playerOne';
+	}
+
+	var players = [];
+	players[0] = new Player();
+
 	var objects = [];
 	objects[0] = new TriangleShip();
 	objects[0].setLocation(p.windowWidth / 2, p.windowHeight / 2);
-	objects[0].owner = 'playerOne';
+	objects[0].controller = players[0];
 
 	p.setup = function() {
 		p.frameRate(60);
@@ -76,16 +86,16 @@ var s = function( p ) {
 		for (i=0; i<objects.length; i++) {
 			p.translate(objects[i].location.x, objects[i].location.y);
 			objects[i].drawMain();
-			p.translate(-objects[i].location.x, -objects[i].location.y);
-			if (objects[i].owner = 'playerOne') {
-				if (p.keyIsDown(87)) {
+			p.translate(-objects[i].location.x, -objects[i].location.y); // reset to 0,0
+			if (objects[i].controller = players[0]) {
+				if (p.keyIsDown(players[0].thrust)) {
 					objects[i].drawThrust();
 					objects[i].applyThrust();
 				}
-				if (p.keyIsDown(65)) {
+				if (p.keyIsDown(players[0].rotateCounterclockwise)) {
 					objects[i].rotate(p.PI / 64);
 				}
-				if (p.keyIsDown(68)) {
+				if (p.keyIsDown(players[0].rotateClockwise)) {
 					objects[i].rotate(-1 * p.PI / 64);
 				}
 			}
