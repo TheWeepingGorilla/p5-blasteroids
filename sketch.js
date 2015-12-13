@@ -18,12 +18,20 @@ var s = function( p ) {
 	function TriangleShip() {
 		Thing.call(this);
 
-		this.drawMe = function() {
-			p.translate(this.location.x, this.location.y);
+		this.drawMain = function() {
 			p.strokeWeight(4);
-			p.stroke('red');
-			p.fill('green');
-			p.triangle(0, -24, -12, 24, 12, 24);
+			p.stroke(240);
+			p.line(0, -24, -12, 16);
+			p.line(-12, 16, 0, 0);
+			p.line(0, 0, 12, 16);
+			p.line(12, 16, 0, -24);
+		}
+
+		this.drawThrust = function() {
+			p.strokeWeight(2);
+			p.stroke(240);
+			p.line(-4, 8, 0, 24);
+			p.line(0, 24, 4, 8);
 		}
 	}
 	TriangleShip.prototype = Object.create(Thing.prototype);
@@ -42,7 +50,9 @@ var s = function( p ) {
 		p.background(0);
 		p.push();
 
-		objects[0].drawMe();
+		p.translate(objects[0].location.x, objects[0].location.y);
+		objects[0].drawMain();
+		objects[0].drawThrust();
 
 		// restore default drawing location (0,0)
 		p.pop();
