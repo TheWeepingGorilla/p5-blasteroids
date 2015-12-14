@@ -10,6 +10,7 @@ var a = function( p ) {
 		this.thrust = 0;
 
 		this.controller = 'program';
+		this.radius = 7; // collision detection radius
 
 		this.setLocation = function(x, y) {
 			this.location.x = x;
@@ -17,9 +18,6 @@ var a = function( p ) {
 		}
 
 		this.applyThrust = function() {
-			// note: thrust is applied where the Thing is pointing, which for some Things (e.g. piloted ships)
-			// isn't usually the direction it's currently going so we need to find the x and y for the current
-			// angle of the Thing and apply the thrust in the correct direction
 			var x = p.cos(this.angle);
 			var y = p.sin(this.angle);
 			var vecToAdd = p.createVector(x,y);
@@ -111,8 +109,10 @@ var a = function( p ) {
 
 	var objects = [];
 	objects[0] = new TriangleShip();
-	objects[0].setLocation(p.windowWidth / 2, p.windowHeight / 2);
-	objects[0].controller = players[0];
+	objects[0].setLocation(p.windowWidth * .25, p.windowHeight * .5);
+	objects[0].controller = players[0].name;
+	objects[1] = new TriangleShip();
+	objects[1].setLocation(p.windowWidth * .75, p.windowHeight * .5);
 
 	wrapTop = function(thing) {
 		if (thing.location.y < 0) {
@@ -138,6 +138,34 @@ var a = function( p ) {
 		}
 	}
 
+	collisionDetect = function (objects) {
+  	var objectsColliding = [];
+  	for (i=0; i<objects.length; i++) {
+  		for (j=0; j<objects.length; j++) {
+  			if (i != j) {
+  				var centerVec = [objects[j].location.x - objects[i].location.x, objects[j].location.y - objects[i].location.y];
+  				var distSquared = (centerVec[0] * centerVec[0]) + (centerVec[1] * centerVec[1]);
+  				if (distSquared < ((objects[i].radius + objects[j].radius) * (objects[i].radius * objects[j].radius))) {
+    				objectsColliding.push([objects[i], objects[j]]);
+  				}
+				}
+			}
+		}
+		return objectsColliding;
+	};
+
+	// collisionDetect = function(objects) {
+	// 	for (i=0; i<objects.length; i++) {
+	// 		for (j=0; j<objects.length; j++) {
+	// 			if (i != j) {
+	// 				if (objects[i].location.dist(objects[j].location) < 10) {
+	// 					console.log("COLLIDED!!!!");
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
+
 	var levels = [];
 
 	levels[0] = {top: wrapTop, left: wrapLeft, bottom: wrapBottom, right: wrapRight};
@@ -161,7 +189,7 @@ var a = function( p ) {
 			objects[i].drawMain();
 
 			// get movement inputs and apply
-			if (objects[i].controller = players[0]) {
+			if (objects[i].controller === players[0].name) {
 				if (p.keyIsDown(players[0].thrust)) {
 					objects[i].drawThrust();
 					objects[i].applyThrust();
@@ -181,6 +209,9 @@ var a = function( p ) {
 			level.checkBoundaries(objects[i]);
 			p.pop();
 		}
+		// check for collisions
+		var collisions = collisionDetect(objects);
+		console.log(collisions);
 		p.pop();
 	}
 
