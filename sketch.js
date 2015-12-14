@@ -3,8 +3,7 @@ var a = function( p ) {
 	function Thing() {
 		this.angle = 0;
 		this.angularVelocity = 0;
-		this.angularAcceleration = 0;
-		this.angleLimit = 0;
+		this.angularVelocityLimit = 0;
 
 		this.location = p.createVector(0, 0);
 		this.velocity = p.createVector(0, 0);
@@ -29,43 +28,61 @@ var a = function( p ) {
 			vecToAdd.rotate(this.thrust[0].directionOffset);
 			vecToAdd.mult(this.thrust[0].strength);
 			this.velocity = this.velocity.add(vecToAdd);
-			console.log(this.velocity);
 		}
 
-		this.rotate = function(rotation) {
-			this.angle = this.angle + rotation;
-			if (Math.abs(this.angle) >= this.angleLimit) {
-				if (this.angle <= 0) {
-					this.angle = -this.angleLimit;
+		this.rotate = function(direction) {
+			this.angularVelocity = this.angularVelocity + (this.rotation.strength * direction);
+			if (Math.abs(this.angularVelocity) >= this.rotation.angularVelocityLimit) {
+				if (this.angularVelocity <= 0) {
+					this.angularVelocity = -this.rotation.angularVelocityLimit;
 				}
 				else {
-					this.angle = this.angleLimit;
+					this.angularVelocity= this.rotation.angularVelocityLimit;
 				}
 			}
-			console.log(this.angle);
+		}
+
+		this.rotationDamping = function() {
+			if (this.angularVelocity > 0) {
+				this.angularVelocity = this.angularVelocity - this.rotation.damping;
+				if (this.angularVelocity <= 0) {
+					this.angularVelocity = 0;
+				}
+			}
+			if (this.angularVelocity < 0) {
+				this.angularVelocity = this.angularVelocity + this.rotation.damping;
+				if (this.angularVelocity >= 0) {
+					this.angularVelocity = 0;
+				}
+			}
+		}
+
+		this.move = function() {
+			this.angle = this.angle + this.angularVelocity;
+			this.location = this.location.add(this.velocity);
 		}
 	}
 
 	function TriangleShip() {
 		Thing.call(this);
 
-		this.thrust = [{strength: .01, directionOffset: 0}];
-		this.angleLimit = .2;
+		this.thrust = [{strength: 0.1, directionOffset: 0}];
+		this.rotation = {strength: Math.PI / 64, damping: .1, angularVelocityLimit: .2};
 
 		this.drawMain = function() {
 			p.strokeWeight(4);
 			p.stroke(240);
-			p.line(0, -24, -12, 16);
-			p.line(-12, 16, 0, 0);
-			p.line(0, 0, 12, 16);
-			p.line(12, 16, 0, -24);
+			p.line(24, 0, -16, -12);
+			p.line(-16, -12, 0, 0);
+			p.line(0, 0, -16, 12);
+			p.line(-16, 12, 24, 0);
 		}
 
 		this.drawThrust = function() {
 			p.strokeWeight(2);
 			p.stroke(240);
-			p.line(-4, 8, 0, 24);
-			p.line(0, 24, 4, 8);
+			p.line(-8, 4, -24, 0);
+			p.line(-24, 0, -8, -4);
 		}
 	}
 	TriangleShip.prototype = Object.create(Thing.prototype);
@@ -91,29 +108,37 @@ var a = function( p ) {
 	}
 
 	p.draw = function() {
+		p.push();
 		p.background(0);
 
 		for (i=0; i<objects.length; i++) {
+			p.push();
+			// draw object at present position
 			p.translate(objects[i].location.x, objects[i].location.y);
 			p.rotate(objects[i].angle);
 			objects[i].drawMain();
-			p.translate(-objects[i].location.x, -objects[i].location.y); // reset to 0,0
+
+			// get movement inputs and apply
 			if (objects[i].controller = players[0]) {
 				if (p.keyIsDown(players[0].thrust)) {
 					objects[i].drawThrust();
 					objects[i].applyThrust();
 				}
 				if (p.keyIsDown(players[0].rotateCounterclockwise)) {
-					objects[i].rotate(-p.PI / 64);
+					objects[i].rotate(-1);
 				}
-				else if (p.keyIsDown(players[0].rotateClockwise)) {
-					objects[i].rotate(p.PI / 64);
+				if (p.keyIsDown(players[0].rotateClockwise)) {
+					objects[i].rotate(1);
 				}
-				else {
-					objects[i].angle = 0;
+				if ( (! p.keyIsDown(players[0].rotateCounterclockwise)) && (! p.keyIsDown(players[0].rotateClockwise)) ) {
+					objects[i].rotationDamping();
 				}
 			}
+			// move object
+			objects[i].move();
+			p.pop();
 		}
+		p.pop();
 	}
 
 	// auto-resize canvas to window size
