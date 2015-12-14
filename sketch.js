@@ -17,11 +17,9 @@ var a = function( p ) {
 		}
 
 		this.applyThrust = function() {
-			// note: thrust is applied where the Thing is pointing,
-			// which for some Things (e.g. piloted ships)
-			// isn't usually the direction it's currently going
-			// so we need to find the x and y for the current angle of the Thing
-			// and apply the thrust in the correct direction
+			// note: thrust is applied where the Thing is pointing, which for some Things (e.g. piloted ships)
+			// isn't usually the direction it's currently going so we need to find the x and y for the current
+			// angle of the Thing and apply the thrust in the correct direction
 			var x = p.cos(this.angle);
 			var y = p.sin(this.angle);
 			var vecToAdd = p.createVector(x,y);
