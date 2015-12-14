@@ -154,18 +154,6 @@ var a = function( p ) {
 		return objectsColliding;
 	};
 
-	// collisionDetect = function(objects) {
-	// 	for (i=0; i<objects.length; i++) {
-	// 		for (j=0; j<objects.length; j++) {
-	// 			if (i != j) {
-	// 				if (objects[i].location.dist(objects[j].location) < 10) {
-	// 					console.log("COLLIDED!!!!");
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
-
 	var levels = [];
 
 	levels[0] = {top: wrapTop, left: wrapLeft, bottom: wrapBottom, right: wrapRight};
