@@ -64,8 +64,8 @@ var a = function( p ) {
 	function TriangleShip() {
 		Thing.call(this);
 
-		this.thrust = [{strength: 0.1, directionOffset: 0}];
-		this.rotation = {strength: Math.PI / 64, damping: .1, angularVelocityLimit: .2};
+		this.thrust = [{strength: 0.2, directionOffset: 0}];
+		this.rotation = {strength: Math.PI / 64, damping: .05, angularVelocityLimit: .2};
 
 		this.drawMain = function() {
 			p.strokeWeight(4);
@@ -92,6 +92,20 @@ var a = function( p ) {
 		this.name = 'playerOne';
 	}
 
+	function Level(args) {
+		this.top = args.top;
+		this.left = args.left;
+		this.bottom = args.bottom;
+		this.right = args.right;
+
+		this.checkBoundaries = function(thing) {
+			this.top(thing);
+			this.left(thing);
+			this.bottom(thing);
+			this.right(thing);
+		}
+	}
+
 	var players = [];
 	players[0] = new Player();
 
@@ -99,6 +113,36 @@ var a = function( p ) {
 	objects[0] = new TriangleShip();
 	objects[0].setLocation(p.windowWidth / 2, p.windowHeight / 2);
 	objects[0].controller = players[0];
+
+	wrapTop = function(thing) {
+		if (thing.location.y < 0) {
+			thing.location.y = p.windowHeight;
+		}
+	}
+
+	wrapLeft = function(thing) {
+		if (thing.location.x < 0) {
+			thing.location.x = p.windowWidth;
+		}
+	}
+
+	wrapBottom = function(thing) {
+		if (thing.location.y > p.windowHeight) {
+			thing.location.y = 0;
+		}
+	}
+
+	wrapRight = function(thing) {
+		if (thing.location.x > p.windowWidth) {
+			thing.location.x = 0;
+		}
+	}
+
+	var levels = [];
+
+	levels[0] = {top: wrapTop, left: wrapLeft, bottom: wrapBottom, right: wrapRight};
+
+	var level = new Level(levels[0]);
 
 	p.setup = function() {
 		p.frameRate(60);
@@ -134,6 +178,7 @@ var a = function( p ) {
 			}
 			// move object
 			objects[i].move();
+			level.checkBoundaries(objects[i]);
 			p.pop();
 		}
 		p.pop();
