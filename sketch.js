@@ -1,4 +1,5 @@
 var a = function( p ) {
+	var fps = 60;
 
 	function Thing() {
 		this.angle = 0;
@@ -11,6 +12,45 @@ var a = function( p ) {
 
 		this.controller = 'program';
 		this.radius = 7; // collision detection radius
+
+		this.explosionFrame = 0;
+		this.explosionDuration = 60;
+		this.exploding = false;
+		this.remove = false;
+
+		this.explosion = function() {
+			this.explosionAnimation(this.explosionFrame);
+			this.explosionFrame += 1;
+			if (this.explosionFrame >= this.explosionDuration) {
+				this.explosionFrame = 0;
+				this.exploding = false;
+				this.remove = true;
+			}
+		}
+
+		this.explosionAnimation = function(frame) {
+			if (frame < 20) {
+				p.noStroke();
+  			for (j = 0; j < 10; j++) {
+  				p.ellipse(0, 0, frame, frame * 2.5);
+  				p.rotate(p.PI/5);
+  			}
+			}
+			if ((frame >= 20) && (frame < 40)) {
+				p.noStroke();
+  			for (j = 0; j < 10; j++) {
+  				p.ellipse(0, 0, 20, 50);
+  				p.rotate(p.PI/5);
+  			}
+			}
+			if ((frame >= 40) && (frame < 45)) {
+				p.noStroke();
+				for (j = 0; j < 10; j++) {
+  				p.ellipse(0, 0, 20 - ((frame - 40) * 4), 50 - ((frame - 40) * 10));
+  				p.rotate(p.PI/5);
+  			}
+			}
+		}
 
 		this.setLocation = function(x, y) {
 			this.location.x = x;
@@ -59,9 +99,10 @@ var a = function( p ) {
 		}
 	}
 
-	function TriangleShip() {
+	function TriangleShip(id) {
 		Thing.call(this);
 
+		this.id = 'TS' + id;
 		this.thrust = [{strength: 0.2, directionOffset: 0}];
 		this.rotation = {strength: Math.PI / 64, damping: .05, angularVelocityLimit: .2};
 
@@ -108,11 +149,13 @@ var a = function( p ) {
 	players[0] = new Player();
 
 	var objects = [];
-	objects[0] = new TriangleShip();
+	objects[0] = new TriangleShip(0);
 	objects[0].setLocation(p.windowWidth * .25, p.windowHeight * .5);
 	objects[0].controller = players[0].name;
-	objects[1] = new TriangleShip();
+	objects[1] = new TriangleShip(1);
 	objects[1].setLocation(p.windowWidth * .75, p.windowHeight * .5);
+	objects[2] = new TriangleShip(2);
+	objects[2].setLocation(p.windowWidth * .75, p.windowHeight * .75);
 
 	wrapTop = function(thing) {
 		if (thing.location.y < 0) {
@@ -146,13 +189,17 @@ var a = function( p ) {
   				var centerVec = [objects[j].location.x - objects[i].location.x, objects[j].location.y - objects[i].location.y];
   				var distSquared = (centerVec[0] * centerVec[0]) + (centerVec[1] * centerVec[1]);
   				if (distSquared < ((objects[i].radius + objects[j].radius) * (objects[i].radius * objects[j].radius))) {
-    				objectsColliding.push([objects[i], objects[j]]);
+    				objectsColliding.push(objects[i], objects[j]);
   				}
 				}
 			}
 		}
-		return objectsColliding;
-	};
+		for (i=0; i<objectsColliding.length; i++) {
+			if (objectsColliding[i].exploding === false) {
+				objectsColliding[i].exploding = true;
+			}
+		}
+	}
 
 	var levels = [];
 
@@ -161,7 +208,7 @@ var a = function( p ) {
 	var level = new Level(levels[0]);
 
 	p.setup = function() {
-		p.frameRate(60);
+		p.frameRate(fps);
 		p.createCanvas(p.windowWidth, p.windowHeight);
 	}
 
@@ -174,7 +221,12 @@ var a = function( p ) {
 			// draw object at present position
 			p.translate(objects[i].location.x, objects[i].location.y);
 			p.rotate(objects[i].angle);
-			objects[i].drawMain();
+			if (objects[i].exploding === true) {
+				objects[i].explosion();
+			}
+			if (objects[i].exploding === false) {
+				objects[i].drawMain();
+			};
 
 			// get movement inputs and apply
 			if (objects[i].controller === players[0].name) {
@@ -198,8 +250,7 @@ var a = function( p ) {
 			p.pop();
 		}
 		// check for collisions
-		var collisions = collisionDetect(objects);
-		console.log(collisions);
+		collisionDetect(objects);
 		p.pop();
 	}
 
